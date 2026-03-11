@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T77_officeqa_highest_dept_spending/fixtures
       OCR_FILENAME: treasury_bulletin_1958_10.txt
       PORT: "9121"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

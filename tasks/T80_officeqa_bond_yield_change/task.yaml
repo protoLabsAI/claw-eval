@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T80_officeqa_bond_yield_change/fixtures
       OCR_FILENAME: treasury_bulletin_1960_07.txt
       PORT: "9124"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

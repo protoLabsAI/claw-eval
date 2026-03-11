@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T83_officeqa_mad_excise_tax/fixtures
       OCR_FILENAME: treasury_bulletin_2018_12.txt
       PORT: "9127"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

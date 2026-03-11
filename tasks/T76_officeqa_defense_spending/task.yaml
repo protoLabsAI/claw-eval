@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T76_officeqa_defense_spending/fixtures
       OCR_FILENAME: treasury_bulletin_1941_01.txt
       PORT: "9120"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

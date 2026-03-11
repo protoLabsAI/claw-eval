@@ -14,7 +14,7 @@ services:
     reset_endpoint: http://localhost:9100/gmail/reset
     env:
       GMAIL_FIXTURES: tasks/T32_escalation_budget_triage/fixtures/gmail/inbox.json
-      ERROR_RATE: "0.1"
+
   - name: contacts
     command: python mock_services/contacts/server.py
     port: 9103
@@ -24,7 +24,7 @@ services:
     reset_endpoint: http://localhost:9103/contacts/reset
     env:
       CONTACTS_FIXTURES: tasks/T32_escalation_budget_triage/fixtures/contacts/contacts.json
-      ERROR_RATE: "0.1"
+
   - name: helpdesk
     command: python mock_services/helpdesk/server.py
     port: 9107
@@ -34,7 +34,7 @@ services:
     reset_endpoint: http://localhost:9107/helpdesk/reset
     env:
       HELPDESK_FIXTURES: tasks/T32_escalation_budget_triage/fixtures/helpdesk/tickets.json
-      ERROR_RATE: "0.1"
+
   - name: crm
     command: python mock_services/crm/server.py
     port: 9110
@@ -44,7 +44,7 @@ services:
     reset_endpoint: http://localhost:9110/crm/reset
     env:
       CRM_FIXTURES: tasks/T32_escalation_budget_triage/fixtures/crm/customers.json
-      ERROR_RATE: "0.1"
+
   - name: finance
     command: python mock_services/finance/server.py
     port: 9104
@@ -54,7 +54,7 @@ services:
     reset_endpoint: http://localhost:9104/finance/reset
     env:
       FINANCE_FIXTURES: tasks/T32_escalation_budget_triage/fixtures/finance/transactions.json
-      ERROR_RATE: "0.1"
+
 
 prompt:
   text: |

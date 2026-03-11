@@ -14,7 +14,7 @@ services:
     reset_endpoint: http://localhost:9106/kb/reset
     env:
       KB_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/kb/articles.json
-      ERROR_RATE: "0"
+
   - name: helpdesk
     command: python mock_services/helpdesk/server.py
     port: 9107
@@ -24,7 +24,7 @@ services:
     reset_endpoint: http://localhost:9107/helpdesk/reset
     env:
       HELPDESK_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/helpdesk/tickets.json
-      ERROR_RATE: "0"
+
   - name: inventory
     command: python mock_services/inventory/server.py
     port: 9108
@@ -34,7 +34,7 @@ services:
     reset_endpoint: http://localhost:9108/inventory/reset
     env:
       INVENTORY_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/inventory/products.json
-      ERROR_RATE: "0"
+
   - name: crm
     command: python mock_services/crm/server.py
     port: 9110
@@ -44,7 +44,7 @@ services:
     reset_endpoint: http://localhost:9110/crm/reset
     env:
       CRM_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/crm/customers.json
-      ERROR_RATE: "0"
+
   - name: config
     command: python mock_services/config/server.py
     port: 9111
@@ -54,7 +54,7 @@ services:
     reset_endpoint: http://localhost:9111/config/reset
     env:
       CONFIG_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/config/integrations.json
-      ERROR_RATE: "0"
+
   - name: scheduler
     command: python mock_services/scheduler/server.py
     port: 9112
@@ -64,7 +64,7 @@ services:
     reset_endpoint: http://localhost:9112/scheduler/reset
     env:
       SCHEDULER_FIXTURES: tasks/T33zh_ops_review_dashboard/fixtures/scheduler/jobs.json
-      ERROR_RATE: "0"
+
 
 prompt:
   text: |

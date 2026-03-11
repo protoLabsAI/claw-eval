@@ -12,7 +12,6 @@ services:
     ready_timeout: 10
     reset_endpoint: http://localhost:9118/caption/reset
     env:
-      ERROR_RATE: "0.0"
       CAPTION_FIXTURES: tasks/T57_deepseek_logo_identification/fixtures
   - name: web_real
     command: python mock_services/web_real/server.py
@@ -22,7 +21,6 @@ services:
     ready_timeout: 10
     reset_endpoint: http://localhost:9114/web/reset
     env:
-      ERROR_RATE: "0.0"
 prompt:
   text: Which company does this logo belong to? The image is at fixtures/media/image.jpg
   language: en

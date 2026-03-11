@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T85_officeqa_army_expenditures/fixtures
       OCR_FILENAMES: treasury_bulletin_1948_04.txt,treasury_bulletin_1952_12.txt
       PORT: "9129"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

@@ -12,7 +12,6 @@ services:
     ready_timeout: 10
     reset_endpoint: http://localhost:9118/caption/reset
     env:
-      ERROR_RATE: "0.0"
       CAPTION_FIXTURES: tasks/T56zh_xiaomi17_recognition/fixtures
   - name: web_real
     command: python mock_services/web_real/server.py
@@ -21,8 +20,6 @@ services:
     health_check_method: GET
     ready_timeout: 10
     reset_endpoint: http://localhost:9114/web/reset
-    env:
-      ERROR_RATE: "0.0"
 prompt:
   text: 这是什么手机？图片路径是 fixtures/media/image.jpg
   language: zh

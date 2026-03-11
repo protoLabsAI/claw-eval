@@ -12,8 +12,6 @@ services:
     health_check_method: GET
     ready_timeout: 10
     reset_endpoint: http://localhost:9114/web/reset
-    env:
-      ERROR_RATE: "0.0"
 
 prompt:
   text: |

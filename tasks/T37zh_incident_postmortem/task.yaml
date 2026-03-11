@@ -14,7 +14,7 @@ services:
     reset_endpoint: http://localhost:9107/helpdesk/reset
     env:
       HELPDESK_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/helpdesk/tickets.json
-      ERROR_RATE: "0"
+
   - name: config
     command: python mock_services/config/server.py
     port: 9111
@@ -24,7 +24,7 @@ services:
     reset_endpoint: http://localhost:9111/config/reset
     env:
       CONFIG_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/config/integrations.json
-      ERROR_RATE: "0"
+
   - name: gmail
     command: python mock_services/gmail/server.py
     port: 9100
@@ -34,7 +34,7 @@ services:
     reset_endpoint: http://localhost:9100/gmail/reset
     env:
       GMAIL_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/gmail/inbox.json
-      ERROR_RATE: "0"
+
   - name: kb
     command: python mock_services/kb/server.py
     port: 9106
@@ -44,7 +44,7 @@ services:
     reset_endpoint: http://localhost:9106/kb/reset
     env:
       KB_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/kb/articles.json
-      ERROR_RATE: "0"
+
   - name: notes
     command: python mock_services/notes/server.py
     port: 9105
@@ -54,7 +54,7 @@ services:
     reset_endpoint: http://localhost:9105/notes/reset
     env:
       NOTES_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/notes/meetings.json
-      ERROR_RATE: "0"
+
   - name: scheduler
     command: python mock_services/scheduler/server.py
     port: 9112
@@ -64,7 +64,7 @@ services:
     reset_endpoint: http://localhost:9112/scheduler/reset
     env:
       SCHEDULER_FIXTURES: tasks/T37zh_incident_postmortem/fixtures/scheduler/jobs.json
-      ERROR_RATE: "0"
+
 
 prompt:
   text: |

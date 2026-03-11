@@ -12,8 +12,6 @@ services:
     health_check_method: POST
     ready_timeout: 10
     reset_endpoint: http://localhost:9110/crm/reset
-    env:
-      ERROR_RATE: "0.5"
 
 prompt:
   text: |

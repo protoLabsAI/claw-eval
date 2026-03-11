@@ -13,7 +13,6 @@ services:
     ready_timeout: 10
     reset_endpoint: http://localhost:9111/config/reset
     env:
-      ERROR_RATE: "0"
       CONFIG_FIXTURES: tasks/T28_api_config_audit/fixtures/config/integrations.json
 
 prompt:

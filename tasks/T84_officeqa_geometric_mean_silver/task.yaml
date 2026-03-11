@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T84_officeqa_geometric_mean_silver/fixtures
       OCR_FILENAME: treasury_bulletin_1940_10.txt
       PORT: "9128"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

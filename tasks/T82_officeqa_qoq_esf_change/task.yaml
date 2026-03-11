@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T82_officeqa_qoq_esf_change/fixtures
       OCR_FILENAME: treasury_bulletin_2022_12.txt
       PORT: "9126"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

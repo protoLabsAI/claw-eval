@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T79_officeqa_zipf_exponent/fixtures
       OCR_FILENAME: treasury_bulletin_2020_12.txt
       PORT: "9123"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |

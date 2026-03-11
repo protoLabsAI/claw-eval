@@ -14,7 +14,6 @@ services:
     reset_endpoint: http://localhost:9103/contacts/reset
     env:
       CONTACTS_FIXTURES: tasks/T25zh_ambiguous_contact_email/fixtures/contacts/contacts.json
-      ERROR_RATE: "0"
   - name: gmail
     command: python mock_services/gmail/server.py
     port: 9100
@@ -24,7 +23,6 @@ services:
     reset_endpoint: http://localhost:9100/gmail/reset
     env:
       GMAIL_FIXTURES: tasks/T25zh_ambiguous_contact_email/fixtures/gmail/inbox.json
-      ERROR_RATE: "0"
 
 prompt:
   text: |

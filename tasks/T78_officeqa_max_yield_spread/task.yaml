@@ -16,7 +16,6 @@ services:
       OCR_FIXTURES: tasks/T78_officeqa_max_yield_spread/fixtures
       OCR_FILENAME: treasury_bulletin_1970_06.txt
       PORT: "9122"
-      ERROR_RATE: "0.1"
 
 prompt:
   text: |
