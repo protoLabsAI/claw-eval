@@ -12,13 +12,6 @@
 
 </div>
 
----
-
-## Roadmap
-
-- [ ] More real-world, multimodal tasks in complex productivity environments
-- [ ] Comprehensive, fine-grained scoring logic with deep state verification
-- [ ] Enhanced sandbox isolation and full-trace tracking for transparent, scalable evaluation
 
 ---
 
@@ -42,6 +35,15 @@ Go rock 🚀
 ```bash
 agent-eval batch --config configs/opus_config.yaml --sandbox --trials 3 --parallel 60
 ```
+
+---
+
+## Roadmap
+
+- [ ] More real-world, multimodal tasks in complex productivity environments
+- [ ] Comprehensive, fine-grained scoring logic with deep state verification
+- [ ] Enhanced sandbox isolation and full-trace tracking for transparent, scalable evaluation
+
 
 ## Contribution
 We welcome any kind of contribution. Let us know if you have any suggestions!
