@@ -17,5 +17,5 @@ RUN pip install -e ".[mock]" --no-cache-dir
 # Create trace output directory
 RUN mkdir -p /workspace/traces
 
-ENTRYPOINT ["agent-eval"]
+ENTRYPOINT ["claw-eval"]
 CMD ["--help"]

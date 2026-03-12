@@ -4,6 +4,8 @@ __pycache__/
 dist/
 build/
 .eggs/
+.venv/
+uv.lock
 
 # Traces (generated output, don't commit)
 traces/

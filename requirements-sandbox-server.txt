@@ -1,4 +1,4 @@
-# Dependencies for the sandbox HTTP server (src/agent_eval/sandbox/server.py).
+# Dependencies for the sandbox HTTP server (src/claw_eval/sandbox/server.py).
 # Used inside agent containers and for local testing.
 #
 #   pip install -r requirements-sandbox-server.txt

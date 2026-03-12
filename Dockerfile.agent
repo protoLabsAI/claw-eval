@@ -14,8 +14,8 @@ RUN pip install -r /tmp/requirements.txt \
         --no-cache-dir \
     && rm /tmp/requirements.txt
 
-# Only copy the sandbox server (not the full agent_eval framework)
-COPY src/agent_eval/sandbox/ /opt/sandbox/
+# Only copy the sandbox server (not the full claw-eval framework)
+COPY src/claw_eval/sandbox/ /opt/sandbox/
 
 # Optional: playwright support (uncomment to enable browser tool)
 # RUN pip install playwright --no-cache-dir && playwright install --with-deps chromium

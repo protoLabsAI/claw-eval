@@ -1,4 +1,4 @@
-# Full dependencies for running agent-eval on the host machine.
+# Full dependencies for running claw-eval on the host machine.
 #
 #   pip install -r requirements.txt
 #

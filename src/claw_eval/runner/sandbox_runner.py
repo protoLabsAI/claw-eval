@@ -302,17 +302,28 @@ class SandboxRunner:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _get_mapped_port(self, container) -> int:
-        """Resolve the dynamically-assigned host port for the sandbox service."""
-        container.reload()
+    def _get_mapped_port(self, container, timeout: float = 10.0) -> int:
+        """Resolve the dynamically-assigned host port for the sandbox service.
+
+        Docker may report an empty binding list for a short period right after
+        container creation, so we poll until the mapping is materialized.
+        """
+        deadline = time.monotonic() + timeout
         port_key = f"{self._config.sandbox_port}/tcp"
-        bindings = container.ports.get(port_key)
-        if not bindings:
-            raise RuntimeError(
-                f"No port binding found for {port_key}. "
-                f"Container ports: {container.ports}"
-            )
-        return int(bindings[0]["HostPort"])
+        last_ports = None
+
+        while time.monotonic() < deadline:
+            container.reload()
+            last_ports = container.ports
+            bindings = last_ports.get(port_key)
+            if bindings and bindings[0].get("HostPort"):
+                return int(bindings[0]["HostPort"])
+            time.sleep(0.2)
+
+        raise RuntimeError(
+            f"No port binding found for {port_key} after {timeout:.1f}s. "
+            f"Container ports: {last_ports}"
+        )
 
     def _wait_healthy(self, url: str, timeout: int = 15) -> None:
         """Poll the sandbox /health endpoint until it responds 200."""
