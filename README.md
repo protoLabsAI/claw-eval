@@ -36,14 +36,14 @@ Prepare your keys and setup the environments with one command:
 
 ```bash
 export OPENROUTER_API_KEY=sk-or-...
-export SERP_DEV_KEY=...
+export SERP_DEV_KEY=... # add this for tasks need real web search
 bash scripts/test_sandbox.sh
 ```
 
 Go rock 🚀
 
 ```bash
-agent-eval batch --config configs/opus_config.yaml --sandbox --trials 3 --parallel 60
+claw-eval batch --config configs/opus_config.yaml --sandbox --trials 3 --parallel 60
 ```
 
 ---
@@ -62,7 +62,7 @@ We welcome any kind of contribution. Let us know if you have any suggestions!
 Our test cases are built on the work of the community. We draw from and adapt tasks contributed by OpenClaw, PinBench, OfficeQA, OneMillion-Bench, Finance Agent, and Terminal-Bench 2.0.
 
 ## Contributors
-[Bowen Ye](https://github.com/pkuYmiracle)*, [Rang Li](https://github.com/lirang04)*, [Qibin Yang](https://github.com/yangqibin-caibi), [Lei Li](lilei-nlp.github.io) $^\dagger$
+[Bowen Ye*](https://github.com/pkuYmiracle), [Rang Li*](https://github.com/lirang04), [Qibin Yang](https://github.com/yangqibin-caibi), [Lei Li](lilei-nlp.github.io) $^\dagger$
 
 Peking University & University of Hong Kong
 
