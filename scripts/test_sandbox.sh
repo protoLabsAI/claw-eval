@@ -1,0 +1,246 @@
+#!/usr/bin/env bash
+#
+# Quick test for sandbox HTTP service + Docker containerization process
+#
+# Usage:
+#   cd /mnt/llm-ssd/yebowen/workspace/learning/browser_use/mimo_claw_eval
+#   bash scripts/test_sandbox.sh
+#
+# Prerequisites:
+#   Docker daemon running (docker ps works) — Phase 2/3 requires, Phase 1 does not
+#
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+pass() { echo -e "${GREEN}[PASS]${NC} $1"; }
+fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
+info() { echo -e "${YELLOW}[INFO]${NC} $1"; }
+
+# ====================================================================
+# Phase 0: Install dependencies
+# ====================================================================
+info "Phase 0: Install dependencies"
+pip install -r requirements-sandbox-server.txt -q 2>&1 | tail -1
+pip install -r requirements.txt -q 2>&1 | tail -1
+pip install -e . -q 2>&1 | tail -1
+pass "Dependencies installed"
+
+echo ""
+# ====================================================================
+# Phase 1: Start sandbox server locally (no Docker required)
+# ====================================================================
+info "Phase 1: Local sandbox server smoke test"
+
+# Start sandbox server in the background
+python src/agent_eval/sandbox/server.py --port 18080 &
+SERVER_PID=$!
+sleep 2
+
+# Verify the process is still running
+if ! kill -0 $SERVER_PID 2>/dev/null; then
+    fail "Failed to start sandbox server"
+fi
+
+# 1.1 health check
+HEALTH=$(curl -s http://localhost:18080/health)
+echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d['status']=='ok'" \
+    && pass "/health returned ok" \
+    || fail "/health error: $HEALTH"
+
+# 1.2 exec
+EXEC_RESULT=$(curl -s -X POST http://localhost:18080/exec \
+    -H 'Content-Type: application/json' \
+    -d '{"command":"echo hello-sandbox"}')
+echo "$EXEC_RESULT" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['exit_code'] == 0
+assert 'hello-sandbox' in d['stdout']
+" && pass "/exec echo hello-sandbox" \
+  || fail "/exec error: $EXEC_RESULT"
+
+# 1.3 write + read
+curl -s -X POST http://localhost:18080/write \
+    -H 'Content-Type: application/json' \
+    -d '{"path":"/tmp/sandbox_test.txt","content":"test-content-12345"}' > /dev/null
+
+READ_RESULT=$(curl -s -X POST http://localhost:18080/read \
+    -H 'Content-Type: application/json' \
+    -d '{"path":"/tmp/sandbox_test.txt"}')
+echo "$READ_RESULT" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['content'] == 'test-content-12345'
+" && pass "/write + /read file I/O" \
+  || fail "/read error: $READ_RESULT"
+
+# 1.4 glob
+GLOB_RESULT=$(curl -s -X POST http://localhost:18080/glob \
+    -H 'Content-Type: application/json' \
+    -d '{"pattern":"/tmp/sandbox_test*"}')
+echo "$GLOB_RESULT" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert len(d['files']) >= 1
+" && pass "/glob file matching" \
+  || fail "/glob error: $GLOB_RESULT"
+
+# 1.5 exec timeout
+TIMEOUT_RESULT=$(curl -s -X POST http://localhost:18080/exec \
+    -H 'Content-Type: application/json' \
+    -d '{"command":"sleep 10","timeout_seconds":1}')
+echo "$TIMEOUT_RESULT" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['exit_code'] == -1
+assert 'Timed out' in d['stderr']
+" && pass "/exec timeout handling" \
+  || fail "/exec timeout error: $TIMEOUT_RESULT"
+
+# 1.6 Read a non-existent file
+READ_404=$(curl -s -X POST http://localhost:18080/read \
+    -H 'Content-Type: application/json' \
+    -d '{"path":"/tmp/nonexistent_file_xyz.txt"}')
+echo "$READ_404" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert 'error' in d
+assert 'not found' in d['error'].lower()
+" && pass "/read returns error for missing file" \
+  || fail "/read 404 error: $READ_404"
+
+# Clean up the local server
+kill $SERVER_PID 2>/dev/null || true
+wait $SERVER_PID 2>/dev/null || true
+rm -f /tmp/sandbox_test.txt
+pass "Phase 1 complete: all local sandbox server smoke tests passed"
+
+echo ""
+
+# ====================================================================
+# Phase 2: Build Docker image + start container (requires Docker daemon)
+# ====================================================================
+if ! command -v docker &> /dev/null; then
+    info "Phase 2: Skipped (docker command not available)"
+    exit 0
+fi
+
+if ! docker info &> /dev/null 2>&1; then
+    info "Phase 2: Skipped (Docker daemon not running)"
+    exit 0
+fi
+
+info "Phase 2: Docker image build + container smoke test"
+
+# 2.1 Build image
+info "Building claw-eval-agent:latest ..."
+docker build -f Dockerfile.agent -t claw-eval-agent:latest . -q \
+    && pass "Docker image built successfully" \
+    || fail "Docker image build failed"
+
+# 2.2 Start container
+CONTAINER_ID=$(docker run -d --rm -p 28080:8080 --name claw-sandbox-test claw-eval-agent:latest)
+info "Container started: $CONTAINER_ID"
+sleep 3
+
+# 2.3 health check
+HEALTH=$(curl -s http://localhost:28080/health || echo '{}')
+echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('status')=='ok'" \
+    && pass "Container /health returned ok" \
+    || fail "Container /health error: $HEALTH"
+
+# 2.4 exec inside container
+EXEC_RESULT=$(curl -s -X POST http://localhost:28080/exec \
+    -H 'Content-Type: application/json' \
+    -d '{"command":"python --version"}')
+echo "$EXEC_RESULT" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['exit_code'] == 0
+assert 'Python' in d['stdout'] or 'Python' in d['stderr']
+" && pass "Container /exec python --version" \
+  || fail "Container /exec error: $EXEC_RESULT"
+
+# 2.5 Isolation check: container should not include grader/mock/scoring code
+ISOLATION=$(curl -s -X POST http://localhost:28080/exec \
+    -H 'Content-Type: application/json' \
+    -d '{"command":"find / -name grader.py 2>/dev/null | head -5"}')
+echo "$ISOLATION" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['stdout'].strip() == '', f'grader.py found: {d[\"stdout\"]}'
+" && pass "Isolation check: no grader.py in container" \
+  || fail "Isolation check failed: $ISOLATION"
+
+ISOLATION2=$(curl -s -X POST http://localhost:28080/exec \
+    -H 'Content-Type: application/json' \
+    -d '{"command":"find / -name \"*.yaml\" -path \"*/tasks/*\" 2>/dev/null | head -5"}')
+echo "$ISOLATION2" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['stdout'].strip() == '', f'task YAML found: {d[\"stdout\"]}'
+" && pass "Isolation check: no task YAML in container" \
+  || fail "Isolation check failed: $ISOLATION2"
+
+# 2.6 Write + read in container
+curl -s -X POST http://localhost:28080/write \
+    -H 'Content-Type: application/json' \
+    -d '{"path":"/workspace/test_output.txt","content":"hello from host"}' > /dev/null
+
+READ_CTR=$(curl -s -X POST http://localhost:28080/read \
+    -H 'Content-Type: application/json' \
+    -d '{"path":"/workspace/test_output.txt"}')
+echo "$READ_CTR" | python -c "
+import sys, json
+d = json.load(sys.stdin)
+assert d['content'] == 'hello from host'
+" && pass "Container /write + /read" \
+  || fail "Container /write+/read error: $READ_CTR"
+
+# Clean up container
+docker stop claw-sandbox-test 2>/dev/null || true
+pass "Phase 2 complete: all Docker container smoke tests passed"
+
+echo ""
+
+# ====================================================================
+# Phase 3: Python API smoke test (SandboxRunner)
+# ====================================================================
+info "Phase 3: SandboxRunner Python API test"
+
+python -c "
+from agent_eval.runner.sandbox_runner import SandboxRunner, ContainerHandle
+from agent_eval.config import SandboxConfig
+
+cfg = SandboxConfig(enabled=True)
+runner = SandboxRunner(cfg)
+
+# start container
+handle = runner.start_container(run_id='smoke-test')
+print(f'  Container started at {handle.sandbox_url}')
+
+# verify via HTTP
+import httpx
+resp = httpx.get(f'{handle.sandbox_url}/health', timeout=5)
+assert resp.json()['status'] == 'ok', 'health check failed'
+print('  Health check passed')
+
+resp = httpx.post(f'{handle.sandbox_url}/exec', json={'command': 'whoami'}, timeout=5)
+print(f'  whoami: {resp.json()[\"stdout\"].strip()}')
+
+# stop container
+runner.stop_container(handle)
+print('  Container stopped')
+" && pass "SandboxRunner start/stop flow" \
+  || fail "SandboxRunner test failed"
+
+echo ""
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  All tests passed!${NC}"
+echo -e "${GREEN}========================================${NC}"
+
