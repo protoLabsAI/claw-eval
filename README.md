@@ -24,6 +24,14 @@ Browse the full leaderboard and individual task cases at **[claw-eval.github.io]
 
 ## Quick Start
 
+We recommend using [uv](https://docs.astral.sh/uv/) for fast, reliable dependency management:
+
+```bash
+pip install uv
+uv venv --python 3.11
+source .venv/bin/activate
+```
+
 Prepare your keys and setup the environments with one command:
 
 ```bash
@@ -54,8 +62,7 @@ We welcome any kind of contribution. Let us know if you have any suggestions!
 Our test cases are built on the work of the community. We draw from and adapt tasks contributed by OpenClaw, PinBench, OfficeQA, OneMillion-Bench, Finance Agent, and Terminal-Bench 2.0.
 
 ## Contributors
-Bowen Ye*, Rang Li*, Qibin Yang, Lei Li $^\dagger$
+[Bowen Ye](https://github.com/pkuYmiracle)*, [Rang Li](https://github.com/lirang04)*, [Qibin Yang](https://github.com/yangqibin-caibi), [Lei Li](lilei-nlp.github.io) $^\dagger$
 
 Peking University & University of Hong Kong
-
 

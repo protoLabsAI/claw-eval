@@ -3,7 +3,7 @@
 # Quick test for sandbox HTTP service + Docker containerization process
 #
 # Usage:
-#   cd /mnt/llm-ssd/yebowen/workspace/learning/browser_use/mimo_claw_eval
+#   cd claw_eval
 #   bash scripts/test_sandbox.sh
 #
 # Prerequisites:
@@ -22,12 +22,17 @@ fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
 info() { echo -e "${YELLOW}[INFO]${NC} $1"; }
 
 # ====================================================================
-# Phase 0: Install dependencies
+# Phase 0: Create venv and install dependencies
 # ====================================================================
-info "Phase 0: Install dependencies"
-pip install -r requirements-sandbox-server.txt -q 2>&1 | tail -1
-pip install -r requirements.txt -q 2>&1 | tail -1
-pip install -e . -q 2>&1 | tail -1
+info "Phase 0: Create venv and install dependencies"
+if [ ! -d ".venv" ]; then
+    uv venv --python 3.11
+    info "Created .venv with Python 3.11"
+fi
+source .venv/bin/activate
+uv pip install -r requirements-sandbox-server.txt -q 2>&1 | tail -1
+uv pip install -r requirements.txt -q 2>&1 | tail -1
+uv pip install -e . -q 2>&1 | tail -1
 pass "Dependencies installed"
 
 echo ""
@@ -37,7 +42,7 @@ echo ""
 info "Phase 1: Local sandbox server smoke test"
 
 # Start sandbox server in the background
-python src/agent_eval/sandbox/server.py --port 18080 &
+uv run python src/claw_eval/sandbox/server.py --port 18080 &
 SERVER_PID=$!
 sleep 2
 
@@ -48,7 +53,7 @@ fi
 
 # 1.1 health check
 HEALTH=$(curl -s http://localhost:18080/health)
-echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d['status']=='ok'" \
+echo "$HEALTH" | uv run python -c "import sys,json; d=json.load(sys.stdin); assert d['status']=='ok'" \
     && pass "/health returned ok" \
     || fail "/health error: $HEALTH"
 
@@ -56,7 +61,7 @@ echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d['s
 EXEC_RESULT=$(curl -s -X POST http://localhost:18080/exec \
     -H 'Content-Type: application/json' \
     -d '{"command":"echo hello-sandbox"}')
-echo "$EXEC_RESULT" | python -c "
+echo "$EXEC_RESULT" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['exit_code'] == 0
@@ -72,7 +77,7 @@ curl -s -X POST http://localhost:18080/write \
 READ_RESULT=$(curl -s -X POST http://localhost:18080/read \
     -H 'Content-Type: application/json' \
     -d '{"path":"/tmp/sandbox_test.txt"}')
-echo "$READ_RESULT" | python -c "
+echo "$READ_RESULT" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['content'] == 'test-content-12345'
@@ -83,7 +88,7 @@ assert d['content'] == 'test-content-12345'
 GLOB_RESULT=$(curl -s -X POST http://localhost:18080/glob \
     -H 'Content-Type: application/json' \
     -d '{"pattern":"/tmp/sandbox_test*"}')
-echo "$GLOB_RESULT" | python -c "
+echo "$GLOB_RESULT" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert len(d['files']) >= 1
@@ -94,7 +99,7 @@ assert len(d['files']) >= 1
 TIMEOUT_RESULT=$(curl -s -X POST http://localhost:18080/exec \
     -H 'Content-Type: application/json' \
     -d '{"command":"sleep 10","timeout_seconds":1}')
-echo "$TIMEOUT_RESULT" | python -c "
+echo "$TIMEOUT_RESULT" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['exit_code'] == -1
@@ -106,7 +111,7 @@ assert 'Timed out' in d['stderr']
 READ_404=$(curl -s -X POST http://localhost:18080/read \
     -H 'Content-Type: application/json' \
     -d '{"path":"/tmp/nonexistent_file_xyz.txt"}')
-echo "$READ_404" | python -c "
+echo "$READ_404" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert 'error' in d
@@ -150,7 +155,7 @@ sleep 3
 
 # 2.3 health check
 HEALTH=$(curl -s http://localhost:28080/health || echo '{}')
-echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('status')=='ok'" \
+echo "$HEALTH" | uv run python -c "import sys,json; d=json.load(sys.stdin); assert d.get('status')=='ok'" \
     && pass "Container /health returned ok" \
     || fail "Container /health error: $HEALTH"
 
@@ -158,7 +163,7 @@ echo "$HEALTH" | python -c "import sys,json; d=json.load(sys.stdin); assert d.ge
 EXEC_RESULT=$(curl -s -X POST http://localhost:28080/exec \
     -H 'Content-Type: application/json' \
     -d '{"command":"python --version"}')
-echo "$EXEC_RESULT" | python -c "
+echo "$EXEC_RESULT" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['exit_code'] == 0
@@ -170,7 +175,7 @@ assert 'Python' in d['stdout'] or 'Python' in d['stderr']
 ISOLATION=$(curl -s -X POST http://localhost:28080/exec \
     -H 'Content-Type: application/json' \
     -d '{"command":"find / -name grader.py 2>/dev/null | head -5"}')
-echo "$ISOLATION" | python -c "
+echo "$ISOLATION" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['stdout'].strip() == '', f'grader.py found: {d[\"stdout\"]}'
@@ -180,7 +185,7 @@ assert d['stdout'].strip() == '', f'grader.py found: {d[\"stdout\"]}'
 ISOLATION2=$(curl -s -X POST http://localhost:28080/exec \
     -H 'Content-Type: application/json' \
     -d '{"command":"find / -name \"*.yaml\" -path \"*/tasks/*\" 2>/dev/null | head -5"}')
-echo "$ISOLATION2" | python -c "
+echo "$ISOLATION2" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['stdout'].strip() == '', f'task YAML found: {d[\"stdout\"]}'
@@ -195,7 +200,7 @@ curl -s -X POST http://localhost:28080/write \
 READ_CTR=$(curl -s -X POST http://localhost:28080/read \
     -H 'Content-Type: application/json' \
     -d '{"path":"/workspace/test_output.txt"}')
-echo "$READ_CTR" | python -c "
+echo "$READ_CTR" | uv run python -c "
 import sys, json
 d = json.load(sys.stdin)
 assert d['content'] == 'hello from host'
@@ -213,9 +218,9 @@ echo ""
 # ====================================================================
 info "Phase 3: SandboxRunner Python API test"
 
-python -c "
-from agent_eval.runner.sandbox_runner import SandboxRunner, ContainerHandle
-from agent_eval.config import SandboxConfig
+uv run python -c "
+from claw_eval.runner.sandbox_runner import SandboxRunner, ContainerHandle
+from claw_eval.config import SandboxConfig
 
 cfg = SandboxConfig(enabled=True)
 runner = SandboxRunner(cfg)
@@ -243,4 +248,3 @@ echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  All tests passed!${NC}"
 echo -e "${GREEN}========================================${NC}"
-
