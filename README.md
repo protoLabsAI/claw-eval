@@ -13,9 +13,9 @@
 > 104 tasks, 15 services, Docker sandboxes, and robust grading.
 
 </div>
-
-**📢 v1.0.0 is now live!
-Built on reproducible real-world complexity.**
+** 📢 v1.1.0 is now live! 35 more challenging multimodal agentic tasks — agents perceive, reason, create, and deliver. **
+📢 v1.0.0 is now live!
+Built on reproducible real-world complexity.
 
 ---
 
