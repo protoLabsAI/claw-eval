@@ -37,6 +37,7 @@ class TraceStart(BaseModel):
     trace_id: str
     task_id: str
     model: str
+    resolved_model: str | None = None  # actual model name from /v1/models
     persona: str = "default"
     timestamp: str = Field(default_factory=_now)
 

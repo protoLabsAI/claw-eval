@@ -38,6 +38,17 @@ def _brief(d: dict, max_len: int = 80) -> str:
     return s if len(s) <= max_len else s[:max_len] + "..."
 
 
+def _resolve_model(provider: "OpenAICompatProvider") -> str | None:
+    """Query /v1/models to get the actual model name behind an alias."""
+    try:
+        models = provider.client.models.list()
+        if models.data:
+            return models.data[0].id
+    except Exception:
+        pass
+    return None
+
+
 def _build_initial_user_content(
     task: TaskDefinition,
     *,
@@ -178,7 +189,8 @@ def run_task(
     model_time_s = 0.0
     tool_time_s = 0.0
 
-    _log(f"[start] task={task.task_id} model={provider.model_id} trace={trace_path.name}")
+    resolved = _resolve_model(provider)
+    _log(f"[start] task={task.task_id} model={resolved or provider.model_id} trace={trace_path.name}")
     _log(f"[config] max_turns={task.environment.max_turns} timeout={task.environment.timeout_seconds}s sandbox_tools={sandbox_tools}")
 
     with TraceWriter(trace_path) as writer:
@@ -187,6 +199,7 @@ def run_task(
             trace_id=trace_id,
             task_id=task.task_id,
             model=provider.model_id,
+            resolved_model=resolved,
         ))
 
         # Build initial messages

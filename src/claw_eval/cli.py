@@ -104,6 +104,31 @@ def _grade_with_optional_params(
     return scores
 
 
+def _score_communication(judge, task, messages, audit_data) -> float:
+    """Score the communication dimension via LLM judge using task.judge_rubric.
+
+    Returns 0.0 if no judge, no rubric, or judge call fails.
+    """
+    if judge is None or not task.judge_rubric:
+        return 0.0
+
+    from .graders.base import AbstractGrader
+
+    try:
+        conversation = AbstractGrader.format_conversation(messages)
+        actions_summary = AbstractGrader.summarize_actions(audit_data)
+        result = judge.evaluate(
+            task_prompt=task.prompt,
+            conversation=conversation,
+            actions_summary=actions_summary,
+            rubric=task.judge_rubric,
+        )
+        return result.score
+    except Exception as exc:
+        print(f"[communication] judge call failed: {exc}")
+        return 0.0
+
+
 def _collect_env_snapshot(sandbox_url: str, task) -> dict:
     """Collect environment data from the container after the agent loop finishes.
 
@@ -293,6 +318,9 @@ def cmd_run(args: argparse.Namespace) -> None:
                     audit_data=audit_data, judge=judge, media_events=media_events,
                     env_snapshot=env_snapshot,
                 )
+                scores.communication = _score_communication(
+                    judge, task, messages, audit_data,
+                )
                 task_score = compute_task_score(scores)
                 passed = is_pass(task_score)
                 trial_scores.append(task_score)
@@ -367,6 +395,9 @@ def cmd_run(args: argparse.Namespace) -> None:
             scores = _grade_with_optional_params(
                 grader, messages, dispatches, task,
                 audit_data=audit_data, judge=judge, media_events=media_events,
+            )
+            scores.communication = _score_communication(
+                judge, task, messages, audit_data,
             )
             task_score = compute_task_score(scores)
             passed = is_pass(task_score)
@@ -526,6 +557,7 @@ def cmd_grade(args: argparse.Namespace) -> None:
         grader, messages, dispatches, task,
         audit_data=audit_data, judge=judge, media_events=media_events,
     )
+    scores.communication = _score_communication(judge, task, messages, audit_data)
     task_score = compute_task_score(scores)
     passed = is_pass(task_score)
 
@@ -705,6 +737,9 @@ def _run_single_task(
                             grader, messages, dispatches, task,
                             audit_data=audit_data, judge=judge, media_events=media_events,
                             env_snapshot=env_snapshot,
+                        )
+                        scores.communication = _score_communication(
+                            judge, task, messages, audit_data,
                         )
                         task_score = compute_task_score(scores)
                         _append_grading_to_trace(
