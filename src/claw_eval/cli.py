@@ -323,6 +323,10 @@ def cmd_run(args: argparse.Namespace) -> None:
                 )
                 task_score = compute_task_score(scores)
                 passed = is_pass(task_score)
+                _append_grading_to_trace(
+                    trace_path, start.trace_id, task.task_id,
+                    scores, task_score, passed,
+                )
                 trial_scores.append(task_score)
                 totals = _trace_totals(end)
 
@@ -401,6 +405,10 @@ def cmd_run(args: argparse.Namespace) -> None:
             )
             task_score = compute_task_score(scores)
             passed = is_pass(task_score)
+            _append_grading_to_trace(
+                trace_path, start.trace_id, task.task_id,
+                scores, task_score, passed,
+            )
             trial_scores_local.append(task_score)
             totals = _trace_totals(end)
 
@@ -560,6 +568,10 @@ def cmd_grade(args: argparse.Namespace) -> None:
     scores.communication = _score_communication(judge, task, messages, audit_data)
     task_score = compute_task_score(scores)
     passed = is_pass(task_score)
+    _append_grading_to_trace(
+        Path(args.trace), start.trace_id, task.task_id,
+        scores, task_score, passed,
+    )
 
     print(f"Trace:   {args.trace}")
     print(f"Task:    {task.task_id} ({task.task_name})")
