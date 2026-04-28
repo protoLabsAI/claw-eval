@@ -271,13 +271,38 @@ class OpenAICompatProvider:
             else:
                 oai_messages.append(converted)
 
-        kwargs: dict[str, Any] = {
-            "model": self.model_id,
-            "messages": oai_messages,
-            "temperature": 0.0,
-        }
-        if self.extra_body:
-            kwargs["extra_body"] = dict(self.extra_body)
+        # Qwen-recommended sampling for non-thinking agentic tasks
+        # (thinking mode uses enable_thinking in extra_body instead)
+        is_thinking = bool(
+            self.extra_body
+            and self.extra_body.get("chat_template_kwargs", {}).get("enable_thinking")
+        )
+        if is_thinking:
+            # Thinking — precise coding preset (agentic tool use, code gen)
+            kwargs: dict[str, Any] = {
+                "model": self.model_id,
+                "messages": oai_messages,
+                "temperature": 0.6,
+                "top_p": 0.95,
+            }
+            default_presence = 0.0
+        else:
+            # Instruct / non-thinking preset
+            kwargs: dict[str, Any] = {
+                "model": self.model_id,
+                "messages": oai_messages,
+                "temperature": 0.7,
+                "top_p": 0.8,
+            }
+            default_presence = 1.5
+
+        # vLLM-specific params go through extra_body
+        extra = dict(self.extra_body) if self.extra_body else {}
+        extra.setdefault("top_k", 20)
+        extra.setdefault("min_p", 0.0)
+        extra.setdefault("presence_penalty", default_presence)
+        extra.setdefault("repetition_penalty", 1.0)
+        kwargs["extra_body"] = extra
         if tools:
             kwargs["tools"] = [_tool_spec_to_openai(t) for t in tools]
 
