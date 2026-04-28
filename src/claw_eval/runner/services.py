@@ -91,7 +91,9 @@ class ServiceManager:
                     resp = client.get(svc.health_check, headers=headers)
                 else:
                     resp = client.post(svc.health_check, headers=headers)
-            return resp.status_code < 500
+            # Require 2xx/3xx — anything else (incl. 404 from a colliding
+            # process like node_exporter on :9100) means "not our service".
+            return resp.status_code < 400
         except Exception:
             return False
 
