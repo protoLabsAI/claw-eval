@@ -69,6 +69,7 @@ def _make_judge(cfg, args):
         model_id=model_id,
         api_key=api_key,
         base_url=cfg.judge.base_url,
+        extra_body=cfg.judge.extra_body,
     )
 
 
@@ -679,6 +680,7 @@ def _run_single_task(
             model_id=judge_model or cfg.judge.model_id,
             api_key=cfg.judge.api_key,
             base_url=cfg.judge.base_url,
+            extra_body=cfg.judge.extra_body,
         )
 
     # Resolve sandbox mode

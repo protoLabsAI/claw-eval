@@ -52,6 +52,7 @@ class JudgeConfig(BaseModel):
     base_url: str = "https://openrouter.ai/api/v1"
     model_id: str = "google/gemini-2.5-flash"
     enabled: bool = True
+    extra_body: dict | None = None
 
 
 class DefaultsConfig(BaseModel):

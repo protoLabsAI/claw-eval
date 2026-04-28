@@ -32,9 +32,11 @@ class LLMJudge:
         model_id: str = "google/gemini-2.5-flash",
         api_key: str | None = None,
         base_url: str = "https://openrouter.ai/api/v1",
+        extra_body: dict | None = None,
     ) -> None:
         self.client = OpenAI(api_key=api_key or "dummy", base_url=base_url)
         self.model_id = model_id
+        self.extra_body = extra_body
 
     def evaluate(
         self,
@@ -54,7 +56,7 @@ class LLMJudge:
         last_exc: Exception | None = None
         for attempt in range(max_retries + 1):
             try:
-                resp = self.client.chat.completions.create(
+                kwargs = dict(
                     model=self.model_id,
                     messages=[
                         {"role": "system", "content": _SYSTEM_PROMPT},
@@ -63,7 +65,13 @@ class LLMJudge:
                     temperature=0.0,
                     max_tokens=8192,
                 )
+                if self.extra_body:
+                    kwargs["extra_body"] = self.extra_body
+                resp = self.client.chat.completions.create(**kwargs)
                 raw = resp.choices[0].message.content or "{}"
+                # Strip <think>...</think> blocks emitted by reasoning-mode models
+                # when the server has no reasoning-parser configured.
+                raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
                 # Strip markdown code fences if present
                 raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
                 raw = re.sub(r"\s*```$", "", raw.strip())
