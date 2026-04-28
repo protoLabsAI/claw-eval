@@ -37,6 +37,17 @@ class LLMJudge:
         self.client = OpenAI(api_key=api_key or "dummy", base_url=base_url)
         self.model_id = model_id
         self.extra_body = extra_body
+        # Per-task graders call self.client.chat.completions.create directly
+        # and don't know about extra_body. Wrap the bound method so every
+        # caller gets extra_body merged in unless they pass their own.
+        if extra_body:
+            _orig_create = self.client.chat.completions.create
+
+            def _create_with_extra_body(*args, **kwargs):
+                kwargs.setdefault("extra_body", extra_body)
+                return _orig_create(*args, **kwargs)
+
+            self.client.chat.completions.create = _create_with_extra_body
 
     def evaluate(
         self,
