@@ -117,14 +117,14 @@ class EmailTriageGrader(AbstractGrader):
             'Output JSON only, msg_ids as keys, e.g. {"msg_001": "需回复", ...}'
         )
 
-        max_retries = 20
+        max_retries = 4
         for attempt in range(max_retries + 1):
             try:
                 resp = judge.client.chat.completions.create(
                     model=judge.model_id,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.0,
-                    max_tokens=256,
+                    max_tokens=4096,
                 )
                 raw = resp.choices[0].message.content or "{}"
                 raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
@@ -145,4 +145,10 @@ class EmailTriageGrader(AbstractGrader):
                 print(f"[judge-retry] ({status or type(exc).__name__}), "
                       f"attempt {attempt + 1}/{max_retries}, waiting {delay:.1f}s ...")
                 time.sleep(delay)
+
+        # Judge unreachable after all retries — fail LOUD, never return None
+        # (which would crash the grader at `0.65 * classification_score`).
+        print(f"[JUDGE-FAILED] {type(self).__name__}: judge unreachable after "
+              f"{max_retries} retries; scoring classification component 0.0")
+        return 0.0
 

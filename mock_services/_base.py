@@ -48,9 +48,13 @@ class ErrorInjectionMiddleware(BaseHTTPMiddleware):
         if any(path.endswith(suffix) for suffix in _EXEMPT_SUFFIXES):
             return await call_next(request)
 
-        # Health-check probes from ServiceManager send this header — skip injection.
+        # Health-check probes from ServiceManager send this header. Return 200
+        # immediately as a pure liveness signal — do NOT proceed to the route,
+        # whose request-body validation would otherwise 422 (e.g. an empty probe
+        # POST to /kb/search or /contacts/search) and make the service look
+        # permanently unhealthy, silently failing every task that uses it.
         if request.headers.get("X-Health-Check") == "1":
-            return await call_next(request)
+            return JSONResponse(status_code=200, content={"status": "ok"})
 
         # Only inject on POST endpoints (the actual tool calls)
         if request.method != "POST":
