@@ -1,0 +1,14 @@
+# De-mirrored build for protolabs (no CN mirrors). Build:
+#   docker build -f Dockerfile.agent.local -t claw-agent .
+ARG REGISTRY=docker.io
+FROM ${REGISTRY}/python:3.11-slim
+
+WORKDIR /workspace
+
+COPY requirements-sandbox-server.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt --no-cache-dir && rm /tmp/requirements.txt
+
+COPY src/claw_eval/sandbox/ /opt/sandbox/
+
+EXPOSE 8080
+ENTRYPOINT ["python", "/opt/sandbox/server.py", "--port", "8080"]
