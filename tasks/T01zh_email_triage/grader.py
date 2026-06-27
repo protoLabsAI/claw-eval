@@ -124,7 +124,7 @@ class EmailTriageGrader(AbstractGrader):
                     model=judge.model_id,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.0,
-                    max_tokens=8192,
+                    max_tokens=4096,
                 )
                 raw = resp.choices[0].message.content or "{}"
                 raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
